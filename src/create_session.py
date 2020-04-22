@@ -9,7 +9,6 @@ def create_session(web_host, username, password):
     r = session.get(api_url, verify=False)
     # we get a list of versions
     versions = r.json()['data']
-
     # use most recent version...
     version = versions[-1]
     # get the 'base' url
@@ -52,4 +51,3 @@ def create_session(web_host, username, password):
     # Can get our 'default' group
 
     return login_rsp, session, base_url
-
