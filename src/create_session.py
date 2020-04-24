@@ -3,10 +3,10 @@ import requests
 
 def create_json_session(web_host, username, password):
     session = requests.Session()
-
     # Start by getting supported versions from the base url...
     api_url = '%s/api/' % web_host
     r = session.get(api_url, verify=False)
+    print(api_url,r)
     # we get a list of versions
     versions = r.json()['data']
     # use most recent version...
@@ -54,6 +54,7 @@ def create_json_session(web_host, username, password):
 
 
 def create_blitz_session(hostname, username, password):
+    from omero.gateway import BlitzGateway
     conn = BlitzGateway(username, password, port=4064, host=hostname)
     conn.connect()
     return conn

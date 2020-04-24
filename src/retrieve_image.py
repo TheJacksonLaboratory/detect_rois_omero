@@ -10,7 +10,6 @@ def retrieve_image(session, base_url, img_id, scale):
     single_image_url = images_url+str(img_id)+"/"
     thisjson = session.get(single_image_url).json()
     width = int(thisjson['data']['Pixels']['SizeX'])
-    print(width)
     scaled = round(width/scale)
     img_address = host+"/webgateway/render_birds_eye_view/"+str(img_id)+"/"+str(scaled)
     jpeg = session.get(img_address, stream=True)
