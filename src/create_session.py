@@ -1,7 +1,7 @@
 import requests
 
 
-def create_session(web_host, username, password):
+def create_json_session(web_host, username, password):
     session = requests.Session()
 
     # Start by getting supported versions from the base url...
@@ -51,3 +51,9 @@ def create_session(web_host, username, password):
     # Can get our 'default' group
 
     return login_rsp, session, base_url
+
+
+def create_blitz_session(hostname, username, password):
+    conn = BlitzGateway(username, password, port=4064, host=hostname)
+    conn.connect()
+    return conn
