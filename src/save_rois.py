@@ -10,7 +10,7 @@ def save_rois(image, regions, scale):
         conn = image._conn
         counter = 1
         for region in regions:
-            bbox = region.bbox
+            bbox = region
             
             shape = create_rectangle(bbox, image, counter, scale)
             if shape is not None:
@@ -45,7 +45,6 @@ def create_rectangle(data, image, order, scale):
     x1 = data[1] * scale
     h = (data[2] - data[0]) * scale
     w = (data[3] - data[1]) * scale
-    
     shape = RectangleI()
     # TODO: handle 'updside down' rectangle x3 < x1
     shape.x = rdouble(x1)

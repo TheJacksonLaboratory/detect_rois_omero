@@ -26,13 +26,90 @@ def create_rois(image, size_thresh, method_thresh, closing):
         coords = np.where(im_lab == i)
         if len(coords[0]) < size_thresh:
             im_lab[coords] = 0
-    im_lab_color = label2rgb(im_lab, bg_label = 0, bg_color=(0,0,0))
+    #im_lab_color = label2rgb(im_lab, bg_label = 0, bg_color=(0,0,0))
     # imshow(im_lab_color)
     # plt.show()    
-    regions = regionprops(im_lab)
+    regionproperties = regionprops(im_lab)
+    regions = []
+    for r in regionproperties:
+        regions.append(r.bbox)
+    regions = prune_regions(regions)
     return regions
 
 
+def prune_regions(regions):
+    restart = True
+    while restart:
+        restart = False
+        for region in regions:   
+            if check_aspect_ratio(region, 4):
+                regions.remove(region)
+                restart = True
+                break
+            
+    restart = True
+    willmerge = []
+    mergee = []
+    for region in regions:
+        intersection = check_intersections(region,regions)
+        if intersection:
+            willmerge.append(True)
+            mergee.append(intersection)
+            #regions = merge_regions(region,regions,intersection)
+            #restart = True
+            
+        else:
+            willmerge.append(False)
+            mergee.append(intersection)
+    counter = 0
+    for region in regions:
+        if willmerge[counter]:
+            regions = merge_regions(region,regions,mergee[counter])
+        counter = counter + 1
+        
+    return list(set(regions))
+
+def check_aspect_ratio(region, threshold):
+    bbox = region
+    ratio = (bbox[2]-bbox[0])/(bbox[3]-bbox[1])
+    if ratio > threshold or ratio < (1/threshold):
+        return True
+
+def check_intersections(region, regions):
+    int_areas = []
+    bbox = region
+    for r in regions:
+        r_bbox = r
+        if (r_bbox == bbox):
+            int_areas.append(0)
+            continue
+        if bbox[0] >= r_bbox[2] or r_bbox[0] >= bbox[2]:
+            int_areas.append(0) 
+            continue
+        if bbox[1] >= r_bbox[3] or r_bbox[1] >= bbox[3]:
+            int_areas.append(0) 
+            continue
+        x1 = max(min(bbox[0],r_bbox[2]), min(r_bbox[0],bbox[2]))
+        y1 = max(min(bbox[1],r_bbox[3]), min(r_bbox[1],bbox[3]))
+        x2 = min(max(bbox[0],r_bbox[2]), max(r_bbox[0],bbox[2]))
+        y2 = min(max(bbox[1],r_bbox[3]), max(r_bbox[1],bbox[3]))
+        if (x2 > x1) and (y2 > y1):
+            int_areas.append((x2-x1)*(y2-y1))
+        else:
+            int_areas.append(0)
+    
+    return int_areas.index(max(int_areas))
+
+
+def merge_regions(region,regions,intersection):
+    other = regions[intersection]
+    x1 = min(region[0],other[0])
+    y1 = min(region[1], other[1])
+    x2 = max(region[2], other[2])
+    y2 = max(region[3], other[3])
+    regions[intersection] = (x1,y1,x2,y2)
+    regions[regions.index(region)] = (x1,y1,x2,y2)
+    return regions
 
 if __name__ == "__main__":
     import os
@@ -40,7 +117,7 @@ if __name__ == "__main__":
     from retrieve_image import retrieve_image
     from save_rois import save_rois, get_image
     
-
+   
 
     WEB_HOSTNAME = os.environ['OMERO_WEB_HOSTNAME']
     HOSTNAME = os.environ['OMERO_HOSTNAME']
