@@ -34,8 +34,67 @@ def create_rois(image, size_thresh, method_thresh, closing):
     for r in regionproperties:
         regions.append(r.bbox)
     regions = prune_regions(regions)
+    regions = order_regions(regions)
+    #return []
     return regions
 
+def distance(p1, p2):
+    import numpy as np
+    d = np.sqrt(((p2[0] - p1[0]) ** 2) + ((p2[1] - p1[1]) ** 2))
+    return d
+
+def weighted_distance(p1, p2, weight):
+    import numpy as np
+    d = np.sqrt(((p2[0] - p1[0]) ** 2) + ((weight * (p2[1] - p1[1])) ** 2))
+    return d
+
+def generate_centroids(regions):
+    centroids = []
+    if regions != []:
+        for region in regions:
+            centroids.append(((region[1]+ region[3])/2, (region[0]+ region[2])/2))
+    return centroids
+
+def order_regions(regions):
+    import networkx as nx
+    import matplotlib.pyplot as plt
+    import numpy as np
+    if regions != []:
+        # regions: y1 x2 y2 x2
+        # centroids: xmean, ymean
+        #while regions != []:
+        centroids = generate_centroids(regions)
+        sums = [c[0]+c[1] for c in centroids]
+        topleft = sums.index(min(sums))
+        c_topleft = centroids[topleft]
+        r_topleft = regions[topleft]
+        regions.remove(r_topleft)
+        centroids.remove(c_topleft)
+        dists = [weighted_distance(x,c_topleft,20) for x in centroids]
+        
+        
+        centroids = [x for _,x in sorted(zip(dists,centroids))]
+        regions = [x for _,x in sorted(zip(dists,regions))]
+        dists = [x for x in sorted(dists)]
+        differences = [dists[i+1]-dists[i] for i in range(len(dists)-1)]
+        line_dividers = differences > 1.5*np.std(differences)
+        line_dividers = np.insert(line_dividers,0,False)
+
+        lines = []
+        lines.append([r_topleft])
+        for i in range(len(regions)):
+            if line_dividers[i]:
+                lines.append([])
+            lines[-1].append(regions[i])
+            
+        results = []
+        for line in lines:
+            line_centr = generate_centroids(line)
+            xvals = [x[0] for x in line_centr]  
+            results.append([x for _,x in sorted(zip(xvals,line))])  
+        return [item for sublist in results for item in sublist]
+    else:
+        return []
 
 def prune_regions(regions):
     restart = True
@@ -47,27 +106,53 @@ def prune_regions(regions):
                 restart = True
                 break
             
-    restart = True
+    regions = cluster_regions(regions)
+    
+    
+    # add code to order ROIs using Dave's networkx thing as a base
+
+    return(regions)
+
+
+def cluster_regions(regions):
+    import networkx as nx
     willmerge = []
     mergee = []
+    results = []
     for region in regions:
         intersection = check_intersections(region,regions)
-        if intersection:
+        if intersection != -1:
             willmerge.append(True)
             mergee.append(intersection)
-            #regions = merge_regions(region,regions,intersection)
-            #restart = True
+            
             
         else:
             willmerge.append(False)
             mergee.append(intersection)
-    counter = 0
-    for region in regions:
-        if willmerge[counter]:
-            regions = merge_regions(region,regions,mergee[counter])
-        counter = counter + 1
-        
-    return list(set(regions))
+            results.append(region)
+    
+
+    # code for merging clusters go here
+    G = nx.Graph()
+    edges = []
+    count = 0
+    for roi in range(len(mergee)):
+        if willmerge[count] == True:
+            edges.append((count,mergee[count]))
+        count = count + 1
+    G.add_edges_from(edges)
+    for a in nx.connected_components(G):
+        roi = merge_cluster(list(a), regions)
+        results.append(roi)
+    
+    return results
+
+
+def merge_cluster(indices, regions):
+    region = regions[indices[0]]
+    for i in range(1,len(indices)):
+        region = merge_regions(region, regions[indices[i]])
+    return region
 
 def check_aspect_ratio(region, threshold):
     bbox = region
@@ -80,8 +165,10 @@ def check_intersections(region, regions):
     bbox = region
     for r in regions:
         r_bbox = r
+        
         if (r_bbox == bbox):
             int_areas.append(0)
+
             continue
         if bbox[0] >= r_bbox[2] or r_bbox[0] >= bbox[2]:
             int_areas.append(0) 
@@ -97,19 +184,19 @@ def check_intersections(region, regions):
             int_areas.append((x2-x1)*(y2-y1))
         else:
             int_areas.append(0)
-    
-    return int_areas.index(max(int_areas))
+    if max(int_areas) == 0:
+        return - 1
+    else:
+        return int_areas.index(max(int_areas)) 
 
 
-def merge_regions(region,regions,intersection):
-    other = regions[intersection]
+def merge_regions(region,other):
     x1 = min(region[0],other[0])
     y1 = min(region[1], other[1])
     x2 = max(region[2], other[2])
     y2 = max(region[3], other[3])
-    regions[intersection] = (x1,y1,x2,y2)
-    regions[regions.index(region)] = (x1,y1,x2,y2)
-    return regions
+    
+    return (x1,y1,x2,y2) 
 
 if __name__ == "__main__":
     import os
