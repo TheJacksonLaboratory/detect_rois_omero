@@ -1,52 +1,51 @@
 from omero.rtypes import rdouble, rint, rstring
 
 def save_rois(image, regions, scale):
-    """
-    Usage: In napari, open console...
-    >>> from omero_napari import *
-    >>> save_rois(viewer, omero_image)
-    """
+    '''
+    Main entry point - given a (BlitzGateway-based) omero image, regions and a scaling factor (that should be the same used for ROI creation),
+    saves the regions as ROIs in OMERO
+
+    Parameters:
+                    image (OMERO image): return of a BlitzGateway.getObject() call, where ROIs will be saved to
+                    regions (list): list of tuples of the form (y1,x1,y2,x2) representing the ROIs to be saved
+                    scale (int? I guess it could be float...): scaling factor that will be applied to the regions (should be the same as the
+                    one used when creating the ROIs)
+    
+                                    
+    '''
     if regions and image:
         conn = image._conn
         counter = 1
         for region in regions:
             bbox = region
             
-            shape = create_rectangle(bbox, image, counter, scale)
+            shape = create_rectangle(bbox, counter, scale)
             if shape is not None:
                 roi = create_roi(conn, image, [shape])
             counter = counter + 1
             
     else:
         return None
-    
 
 
-def get_t(coordinate, image):
-    if image.getSizeT() > 1:
-        return coordinate[0]
-    return 0
 
-def get_z(coordinate, image):
-    if image.getSizeZ() == 1:
-        return 0
-    if image.getSizeT() == 1:
-        return coordinate[0]
-    #if coordinate includes T and Z... [t, z, x, y]
-    return coordinate[1]
-
-
-def create_rectangle(data, image, order, scale):
-    
+def create_rectangle(data, order, scale):
+    '''
+    Generate shape from bounding box data and scaling factor.
+                                    
+    '''
     from omero.model import RectangleI
-    z_index = get_z(0, image)
-    t_index = get_t(0, image)
+    # assuming 2d image
+    z_index = 0
+    t_index = 0
+
+    # scale up to full-size image
     y1 = data[0] * scale
     x1 = data[1] * scale
     h = (data[2] - data[0]) * scale
     w = (data[3] - data[1]) * scale
     shape = RectangleI()
-    # TODO: handle 'updside down' rectangle x3 < x1
+    
     shape.x = rdouble(x1)
     shape.y = rdouble(y1)
     shape.width = rdouble(w)
@@ -61,20 +60,29 @@ def create_rectangle(data, image, order, scale):
     return shape
 
 def create_roi(conn, img, shapes):
+
+    '''
+    Generic function to save ROI(s) to OMERO using updateService    
+                                    
+    '''
     from omero.model import RoiI
     updateService = conn.getUpdateService()
     roi = RoiI()
-    #img = get_image(conn, img_id)
+    
     roi.setImage(img._obj)
+    # I could be calling this function just once by creating a list of shapes beforehand, but whatever
     for shape in shapes:
         roi.addShape(shape)
+    # setting group is always necessary here - using same group as the image's 
     group_id = img.getDetails().getGroup().getId()
     ctx = {'omero.group': str(group_id)}
     return updateService.saveAndReturnObject(roi, ctx)
 
 
 def get_image(conn, image_id):
-    
+    '''
+    Simple image retrieval frm BlitzGateway using an image id.                            
+    '''
     if (image_id):
         image = conn.getObject("Image", image_id)
         return image
