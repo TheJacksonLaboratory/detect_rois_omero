@@ -26,8 +26,8 @@ Set of helper functions for automatically generating bounding boxes for OMERO sl
 
 ```python
     from create_session import create_json_session, create_blitz_session
-    from retrieve_image import retrieve_image
-    from save_rois import save_rois, get_image
+    from retrieve_image import retrieve_image, get_image
+    from save_rois import save_rois
     from create_rois import create_rois
 
     login_rsp, session, base_url = create_json_session(WEB_HOSTNAME, USERNAME, PASSWORD)

@@ -318,8 +318,8 @@ def merge_regions(region,other):
 if __name__ == "__main__":
     import os
     from create_session import create_json_session, create_blitz_session
-    from retrieve_image import retrieve_image
-    from save_rois import save_rois, get_image
+    from retrieve_image import retrieve_image, get_image
+    from save_rois import save_rois
     
    
 

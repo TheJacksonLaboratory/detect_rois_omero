@@ -22,3 +22,14 @@ def retrieve_image(session, base_url, img_id, scale):
     jpeg.close()
     return np.array(i)
     
+
+
+    def get_image(conn, image_id):
+    '''
+    Simple image retrieval frm BlitzGateway using an image id.                            
+    '''
+    if (image_id):
+        image = conn.getObject("Image", image_id)
+        return image
+    else:
+        return None
