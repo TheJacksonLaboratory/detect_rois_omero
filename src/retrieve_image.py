@@ -24,7 +24,7 @@ def retrieve_image(session, base_url, img_id, scale):
     
 
 
-    def get_image(conn, image_id):
+def get_image(conn, image_id):
     '''
     Simple image retrieval frm BlitzGateway using an image id.                            
     '''

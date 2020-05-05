@@ -327,7 +327,7 @@ if __name__ == "__main__":
     HOSTNAME = os.environ['OMERO_HOSTNAME']
     USERNAME = os.environ['OMERO_ADMIN_USER']
     PASSWORD = os.environ['OMERO_ADMIN_PASSWORD']
-    img_id = 1
+    img_id = 4
     scale_factor = 64
     login_rsp, session, base_url = create_json_session(WEB_HOSTNAME, USERNAME, PASSWORD)
     img = retrieve_image(session, base_url, img_id, scale_factor)
