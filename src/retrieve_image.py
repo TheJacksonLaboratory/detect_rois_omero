@@ -14,8 +14,11 @@ def retrieve_image(session, base_url, img_id, scale):
     # calculate width to be requested based on metadata and the specified scale factor
     width = int(thisjson['data']['Pixels']['SizeX'])
     scaled = round(width/scale)
-    img_address = host+"/webgateway/render_birds_eye_view/"+str(img_id)+"/"+str(scaled)
+    img_address = host+"/webgateway/render_birds_eye_view/"+str(img_id)+"/"+str(scaled)+"/"
     jpeg = session.get(img_address, stream=True)
+
+    if jpeg.status_code != 200:
+        raise Exception("Received response {} with content: {}".format(jpeg.status_code, jpeg.content))
 
     # using PIL and BytesIO to open the request content as an image
     i = Image.open(BytesIO(jpeg.content))
