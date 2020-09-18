@@ -1,11 +1,11 @@
 import requests
 
 
-def create_json_session(web_host, username, password):
+def create_json_session(web_host, username, password, verify=True):
     session = requests.Session()
     # Start by getting supported versions from the base url...
     api_url = '%s/api/' % web_host
-    r = session.get(api_url, verify=False)
+    r = session.get(api_url, verify=verify)
     print(api_url,r)
     # we get a list of versions
     versions = r.json()['data']
