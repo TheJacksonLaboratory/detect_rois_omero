@@ -317,11 +317,19 @@ def merge_regions(region,other):
 
 if __name__ == "__main__":
     import os
+    import argparse
+    import sys
+
     from create_session import create_json_session, create_blitz_session
     from retrieve_image import retrieve_image, get_image
     from save_rois import save_rois
     
-   
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--rerun',
+                        dest='rerun',
+                        action='store_true',
+                        help='Set this flag if it is a rerun (WILL delete all existing ROIs')
+    args = parser.parse_args(sys.argv[1:])
 
     WEB_HOSTNAME = os.environ['OMERO_WEB_HOSTNAME']
     HOSTNAME = os.environ['OMERO_HOSTNAME']
@@ -329,10 +337,10 @@ if __name__ == "__main__":
     PASSWORD = os.environ['OMERO_ADMIN_PASSWORD']
     img_id = 4
     scale_factor = 64
-    login_rsp, session, base_url = create_json_session(WEB_HOSTNAME, USERNAME, PASSWORD)
+    login_rsp, session, base_url = create_json_session(WEB_HOSTNAME, USERNAME, PASSWORD, verify=False)
     img = retrieve_image(session, base_url, img_id, scale_factor)
     regions = create_rois(img, 200, 'triangle', 5)
     conn = create_blitz_session(HOSTNAME, USERNAME, PASSWORD)
     image = get_image(conn, img_id)
-    save_rois(image, regions, scale_factor)
+    save_rois(image, regions, scale_factor, args.rerun)
     conn.close()

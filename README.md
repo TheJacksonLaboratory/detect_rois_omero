@@ -20,7 +20,7 @@ Set of helper functions for automatically generating bounding boxes for OMERO sl
 
 ### ROI uploading
 
-- **save_rois(image, regions, scaling_factor)**: saves ROIs back to OMERO - needs to use the Blitz API due to ROI saving not being supported via JSON API, and therefore needs an *Image* object retrieved from OMERO via Blitz API. Scaling factor needs to be specified here to scale ROIs back to full-size image server-side. 
+- **save_rois(image, regions, scaling_factor, rerun)**: saves ROIs back to OMERO - needs to use the Blitz API due to ROI saving not being supported via JSON API, and therefore needs an *Image* object retrieved from OMERO via Blitz API. Scaling factor needs to be specified here to scale ROIs back to full-size image server-side. Added a "--rerun" option for running the same code multiple times over the same image - it deletes ALL existing ROIs on that image before saving the new ones.
 
 ## Example usage
 

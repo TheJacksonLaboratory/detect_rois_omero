@@ -1,6 +1,6 @@
 from omero.rtypes import rdouble, rint, rstring
 
-def save_rois(image, regions, scale):
+def save_rois(image, regions, scale, replace):
     '''
     Main entry point - given a (BlitzGateway-based) omero image, regions and a scaling factor (that should be the same used for ROI creation),
     saves the regions as ROIs in OMERO
@@ -13,6 +13,10 @@ def save_rois(image, regions, scale):
     
                                     
     '''
+
+
+    if replace:
+        remove_all_rois(image)
     if regions and image:
         conn = image._conn
         counter = 1
@@ -27,6 +31,14 @@ def save_rois(image, regions, scale):
     else:
         return None
 
+
+def remove_all_rois(image):
+    conn = image._conn
+    roi_service = conn.getRoiService()
+    result = roi_service.findByImage(image.getId(), None)
+    for roi in result.rois:
+        conn.deleteObjects("Roi", [roi.getId().getValue()])
+    return
 
 
 def create_rectangle(data, order, scale):
