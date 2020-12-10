@@ -10,6 +10,8 @@ def save_rois(image, regions, scale, replace):
                     regions (list): list of tuples of the form (y1,x1,y2,x2) representing the ROIs to be saved
                     scale (int? I guess it could be float...): scaling factor that will be applied to the regions (should be the same as the
                     one used when creating the ROIs)
+                    replace(bool): whether to delete ALL existing ROIs from the image before saving the newly created ones or not. Use when rerunning 
+                    the code on the same image.
     
                                     
     '''

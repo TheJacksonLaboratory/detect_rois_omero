@@ -16,7 +16,7 @@ Set of helper functions for automatically generating bounding boxes for OMERO sl
 
 ### ROI generation
 
-- **create_rois(image, minimum_size, method, closing)**: creates ordered (left/right/top/bottom) ROIs that *should* approximate each slice in a slide scan. Uses thresholding based on a specified method (from 'triangle', 'otsu', 'yen', 'li'), filters by a minimum specified size in pixels, morphologically closes regions using a specified closing radius and then creates, merges appropriately and orders ROIs.
+- **create_rois(image, minimum_size, method, closing, scale_factor)**: creates ordered (left/right/top/bottom) ROIs that *should* approximate each slice in a slide scan. Uses thresholding based on a specified method (from 'triangle', 'otsu', 'yen', 'li'), filters by a minimum specified size in "full-resolution" pixels (i.e. the minimum size in pixels of ROI in the full-res image), morphologically closes regions using a specified closing radius and then creates, merges appropriately and orders ROIs.
 
 ### ROI uploading
 

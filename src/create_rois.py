@@ -1,13 +1,14 @@
-def create_rois(image, size_thresh, method_thresh, closing):
+def create_rois(image, size_thresh, method_thresh, closing, scale_factor):
     '''
     Main entry-point function for generating ROIs automatically. 
     Does thresholding, clever merging of intersecting ROIs and ordering left-right-top-bottom.
 
             Parameters:
                     image (np.array): 3-dimensional (2d + RGB) numpy array with pixel data for retrieved jpeg from OMERO
-                    size_thresh (num): Minimum size (in pixels) for an ROI to be considered an ROI
+                    size_thresh (num): Minimum size (in full-resolution pixels) for an ROI to be considered an ROI
                     method_thresh (str): Thresholding method. Current options are 'otsu', 'triangle', 'yen' and 'li'.
                     closing (int): radius for the diamond-shaped structuring element used for closing operation.
+                    scale_factor (int): scaling that was used to generate the downsampled image. Used to re-scale minimum size threshold.
 
             Returns:
                     regions (list): list of pruned, ordered tuples of the form (y1,x1,y2,x2) representing the ROIs to be saved back to OMERO.
@@ -42,7 +43,7 @@ def create_rois(image, size_thresh, method_thresh, closing):
     # get rid of ROIs smaller than required size threshold
     for i in range(1, im_lab.max()+1):
         coords = np.where(im_lab == i)
-        if len(coords[0]) < size_thresh:
+        if len(coords[0]) < (size_thresh / (scale_factor ** 2)):
             im_lab[coords] = 0
       
     regionproperties = regionprops(im_lab)
@@ -328,7 +329,7 @@ if __name__ == "__main__":
     parser.add_argument('--rerun',
                         dest='rerun',
                         action='store_true',
-                        help='Set this flag if it is a rerun (WILL delete all existing ROIs')
+                        help='Set this flag if it is a rerun (WILL delete ALL existing ROIs)')
     args = parser.parse_args(sys.argv[1:])
 
     WEB_HOSTNAME = os.environ['OMERO_WEB_HOSTNAME']
@@ -339,7 +340,7 @@ if __name__ == "__main__":
     scale_factor = 64
     login_rsp, session, base_url = create_json_session(WEB_HOSTNAME, USERNAME, PASSWORD, verify=False)
     img = retrieve_image(session, base_url, img_id, scale_factor)
-    regions = create_rois(img, 200, 'triangle', 5)
+    regions = create_rois(img, 200, 'triangle', 5, scale_factor)
     conn = create_blitz_session(HOSTNAME, USERNAME, PASSWORD)
     image = get_image(conn, img_id)
     save_rois(image, regions, scale_factor, args.rerun)
